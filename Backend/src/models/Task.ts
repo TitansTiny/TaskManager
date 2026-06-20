@@ -8,8 +8,10 @@ Task.init(
     id:    { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     title: { type: DataTypes.STRING,  allowNull: false },
     done:  { type: DataTypes.BOOLEAN, defaultValue: false },
+    dueDate: { type: DataTypes.DATEONLY, allowNull: true },
+    deletedAt: { type: DataTypes.DATE, allowNull: true },
   },
-  { sequelize, modelName: 'Task', tableName: 'tasks' }
+  { sequelize, modelName: 'Task', tableName: 'tasks', paranoid: true, timestamps: true }
 );
 
 export default Task;
