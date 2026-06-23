@@ -1,41 +1,50 @@
-import { Router} from 'express';
-// import type { Request, Response } from 'express';
+import { Router } from 'express';
+import { Op } from 'sequelize';
 import Task from '../models/Task.js';
 
 const router = Router();
 
-// GET /api/tasks - Listar tareas activas
-// POST /api/tasks - Crear tarea
-// PUT /api/tasks/:id - Actualizar tarea
-// DELETE /api/tasks/:id - Eliminar tarea
-router.get('/',           async (_req, res) => {
-  const tasks = await Task.findAll({ where: { deletedAt: null } });
+// Get all tasks (pending, not deleted)
+router.get('/', async (_req, res) => {
+  const tasks = await Task.findAll({
+    where: { done: false },
+    order: [['createdAt', 'DESC']],
+  });
   res.json(tasks);
 });
 
-router.post('/',          async (req, res) => {
+// Get completed tasks (not deleted — paranoid already excludes deletedAt)
+router.get('/completed', async (_req, res) => {
+  const tasks = await Task.findAll({
+    where: { done: true },
+    order: [['updatedAt', 'DESC']],
+  });
+  res.json(tasks);
+});
+
+// Create a new task
+router.post('/', async (req, res) => {
   const { title, dueDate } = req.body;
-  const task = await Task.create({ title, dueDate });
+  const task = await Task.create({ title, dueDate: dueDate || null });
   res.status(201).json(task);
 });
 
-router.put('/:id',        async (req, res) => {
-  const { title, done, dueDate } = req.body;
-  await Task.update({ title, done, dueDate }, { where: { id: req.params.id } });
-  const updatedTask = await Task.findByPk(req.params.id);
-  res.json(updatedTask);
+// Update a task (title, done, dueDate)
+router.put('/:id', async (req, res) => {
+  const fields: Record<string, any> = {};
+  if (req.body.title   !== undefined) fields.title   = req.body.title;
+  if (req.body.done    !== undefined) fields.done    = req.body.done;
+  if (req.body.dueDate !== undefined) fields.dueDate = req.body.dueDate || null;
+
+  await Task.update(fields, { where: { id: req.params.id } });
+  const updated = await Task.findByPk(req.params.id);
+  res.json(updated);
 });
 
-router.delete('/:id',     async (req, res) => {
+// Soft delete a task (paranoid mode)
+router.delete('/:id', async (req, res) => {
   await Task.destroy({ where: { id: req.params.id } });
   res.json({ message: 'deleted' });
 });
-
-// Get /api/tasks/completed - Listar tareas completadas
-router.get('/completed',  async (_req, res) => {
-  const tasks = await Task.findAll({ where: { done: true } });
-  res.json(tasks);
-});
-
 
 export default router;
