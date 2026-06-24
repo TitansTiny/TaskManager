@@ -47,7 +47,7 @@ export default function Dashboard() {
           <span className="stat-label">Pendientes</span>
         </div>
         <div className="stat-card">
-          <span className="stat-number">{completed.length}</span>
+          <span className="stat-number-completed">{completed.length}</span>
           <span className="stat-label">Completadas</span>
         </div>
         <div className="stat-card danger">
